@@ -1,6 +1,17 @@
 from datetime import date
 
-class Cliente: 
+# Neste modelo, o Pedido guarda apenas uma lista de Pratos.
+# NÃO existe ItemDoPedido.
+# O valor_final já vem calculado e armazenado diretamente.
+# CONSEQUÊNCIA:
+# Se o preço de um prato mudar depois,
+# isso NÃO afeta o pedido, porque o valor final já está fixo.
+
+# O prato possui seu próprio preço.
+# Ele é usado apenas como referência no pedido.
+# Não existe controle de quantidade por prato no pedido.
+
+class Cliente:
     def __init__(self, nome, data_nasc, cpf):
         self.nome = nome
         self.data_nasc = data_nasc

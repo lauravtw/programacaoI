@@ -1,5 +1,21 @@
 from datetime import date
 
+
+# Neste modelo, o Pedido é composto por ItensDoPedido.# Cada item guarda:
+# - o prato
+# - o preço no momento da compra
+# - a quantidade
+# CONSEQUÊNCIA:
+# O histórico de preços é preservado.
+# Mesmo que o preço do prato mude depois,
+# os pedidos antigos NÃO são alterados.
+
+#ItemDoPedido:
+# Representa um item individual dentro do pedido.
+# Ele guarda o prato + quantidade + valor no momento da compra.
+# Isso garante que o pedido não depende do preço atual do prato.
+# O valor fica "congelado" dentro do item.
+
 class Cliente: 
     def __init__(self, nome, data_nasc, cpf):
         self.nome = nome
