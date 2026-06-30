@@ -1,0 +1,186 @@
+# biblioteca adicional para o comando seguinte
+import os
+# comando para centralizar a janela
+os.environ['SDL_VIDEO_CENTERED'] = '1'
+
+# biblioteca pygamezero e componente Actor
+import pgzrun
+from pgzero.actor import Actor
+
+''' 
+-------------------------
+Segue um trecho de código para ignorar warning sobre o screen.
+Um "warning" é um sublinhado em amarelo que aparece no código.
+Quem gera o warning é o Pylance, uma extensão do VSCode 
+que analisa o código em python realizando verificações.
+
+
+* No caso de "screen", ele é criado pelo pygame zero quando o
+programa é executado, mas o Pylance não sabe disso, por isso
+aponta o warning.
+* No caso de "Actor", a classe não está declarada, então
+o Pylance aponta warning.
+
+Para "resolver" esses warnings, usamos a variável TYPE_CHECKING.
+TYPE_CHECKING é Falso quando o programa está executando.
+Quando estamos editando o código no VSCode, ele é Verdadeiro.
+Então, durante a edição, informamos a origem de "screen"
+e de "Actor", para que o Pylance não gere um "warning".
+--------------------------
+'''
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pygame
+    screen: pygame.Surface
+
+# largura e altura da janela
+WIDTH = 650
+HEIGHT = 650
+
+# fator de gravidade
+GRAVITY = 0.2
+
+# perda de velocidade Y quando a bola bate no chão
+# no caso, está igual a 85%
+BOUNCE = 0.85
+
+# altura do piso
+FLOOR_Y = HEIGHT - 100
+
+# piso / "chão"
+floor = Actor("floor")
+floor.left = 0
+floor.top = FLOOR_Y
+
+
+# velocidades iniciais da bola
+vx = 2
+vy = 3
+
+# 1. Criar a lista no escopo global
+bolas: list[Actor] = []
+
+# Criando 3 bolas em posições e velocidades X diferentes
+for i in range(3):
+    nova_bola = Actor("ball.png")
+    nova_bola.x = 150 + (i * 150) # Distribui as bolas horizontalmente
+    nova_bola.y = 100
+    # Guardamos as velocidades dinamicamente dentro do próprio objeto usando atributos dinâmicos do Python
+    nova_bola.vx = 2 + i  
+    nova_bola.vy = 0
+    bolas.append(nova_bola)
+
+# 2. Atualizar todas na função update()
+def update():
+    for b in bolas:
+        b.vy += GRAVITY
+        b.x += b.vx
+        b.y += b.vy
+
+        # Lógica do chão adaptada para cada bola 'b'
+        if b.bottom >= floor.top:
+            b.bottom = floor.top
+            b.vy = -b.vy * BOUNCE
+            b.vx = b.vx * 0.98
+            if abs(b.vx) < 0.1: b.vx = 0
+            if abs(b.vy) < 1: b.vy = 0
+
+        # Lógica das paredes laterais adaptada
+        if b.left <= 0:
+            b.left = 0
+            b.vx = -b.vx
+        if b.right >= WIDTH:
+            b.right = WIDTH
+            b.vx = -b.vx
+
+# 3. Desenhar todas na função draw()
+def draw():
+    screen.fill("skyblue")
+    floor.draw()
+    for b in bolas:
+        b.draw()
+
+pgzrun.go()
+
+'''
+EXERCÍCIOS:
+a) alterar a velocidade inicial de queda da bola ok
+b) alterar a gravidade do cenário ok
+c) alterar o fator de perda do impacto da bola no chão ok
+(ao quicar, ela pode perder mais ou menos velocidade)
+
+Você pode também alterar a cor de fundo, 
+a imagem do piso e a imagem da bola.
+
+Algumas coisas para se pensar sobre como poderia fazer...
+
+d) tentar criar mais bolas? Em vez de criar variáveis com o 
+nome "2", "3", poderia fazer uma "lista" :-)
+
+# 1. Criar a lista no escopo global
+bolas: list[Actor] = []
+
+# Criando 3 bolas em posições e velocidades X diferentes
+for i in range(3):
+    nova_bola = Actor("ball.png")
+    nova_bola.x = 150 + (i * 150) # Distribui as bolas horizontalmente
+    nova_bola.y = 100
+    # Guardamos as velocidades dinamicamente dentro do próprio objeto usando atributos dinâmicos do Python
+    nova_bola.vx = 2 + i  
+    nova_bola.vy = 0
+    bolas.append(nova_bola)
+
+# 2. Atualizar todas na função update()
+def update():
+    for b in bolas:
+        b.vy += GRAVITY
+        b.x += b.vx
+        b.y += b.vy
+
+        # Lógica do chão adaptada para cada bola 'b'
+        if b.bottom >= floor.top:
+            b.bottom = floor.top
+            b.vy = -b.vy * BOUNCE
+            b.vx = b.vx * 0.98
+            if abs(b.vx) < 0.1: b.vx = 0
+            if abs(b.vy) < 1: b.vy = 0
+
+        # Lógica das paredes laterais adaptada
+        if b.left <= 0:
+            b.left = 0
+            b.vx = -b.vx
+        if b.right >= WIDTH:
+            b.right = WIDTH
+            b.vx = -b.vx
+
+# 3. Desenhar todas na função draw()
+def draw():
+    screen.fill("skyblue")
+    floor.draw()
+    for b in bolas:
+        b.draw()
+
+
+e) aumentar o tamanho da janela? ok
+
+f) tentar "girar" a bola? Procure assim no google: 
+"pygamezero girar actor". 
+O giro seria diferente se a bola estiver quicando 
+para a direita ou para a esquerda.
+
+No Pygame Zero, a classe Actor possui um atributo interno chamado angle (em graus).
+Para fazê-la girar dependendo de estar indo para a direita (vx > 0) ou esquerda (vx < 0),
+alteramos o angle proporcionalmente à velocidade vx dentro do update():
+
+def update():
+    global vx, vy
+    vy += GRAVITY
+    ball.x += vx
+    ball.y += vy
+
+    # SE A BOLA ESTIVER SE MOVENDO E NO CHÃO (ou no ar, simulando rotação)
+    # Somamos ou subtraímos o ângulo com base na velocidade horizontal vx
+    ball.angle += vx * 2   # Se vx for positivo, gira no sentido horário; se negativo, anti-horário.
+
+'''
